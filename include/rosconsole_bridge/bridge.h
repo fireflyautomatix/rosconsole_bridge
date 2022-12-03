@@ -34,41 +34,32 @@
 
 /* Author: Ioan Sucan */
 
-#ifndef ROSCONSOLE_BRIDGE_
-#define ROSCONSOLE_BRIDGE_
+#ifndef ROSCONSOLE_BRIDGE__BRIDGE_HPP_
+#define ROSCONSOLE_BRIDGE__BRIDGE_HPP_
 
-#include <ros/macros.h>
 #include <console_bridge/console.h>
-
-#ifdef ROS_BUILD_SHARED_LIBS // ros is being built around shared libraries
-  #ifdef rosconsole_bridge_EXPORTS // we are building a shared lib/dll
-    #define ROSCONSOLE_BRIDGE_DECL ROS_HELPER_EXPORT
-  #else // we are using shared lib/dll
-    #define ROSCONSOLE_BRIDGE_DECL ROS_HELPER_IMPORT
-  #endif
-#else // ros is being built around static libraries
-  #define ROSCONSOLE_BRIDGE_DECL
-#endif
 
 namespace rosconsole_bridge
 {
 
-class OutputHandlerROS : public console_bridge::OutputHandler
-{
+  class OutputHandlerROS: public console_bridge::OutputHandler
+  {
 public:
-  OutputHandlerROS(void);
-  virtual void log(const std::string &text, console_bridge::LogLevel level, const char *filename, int line);
-};
+    OutputHandlerROS(void);
+    virtual void log(
+      const std::string & text, console_bridge::LogLevel level,
+      const char * filename, int line);
+  };
 
-struct ROSCONSOLE_BRIDGE_DECL RegisterOutputHandlerProxy
-{
-  RegisterOutputHandlerProxy(void);
-  ~RegisterOutputHandlerProxy();
-};
+  struct RegisterOutputHandlerProxy
+  {
+    RegisterOutputHandlerProxy();
+    ~RegisterOutputHandlerProxy();
+  };
 
-}
+}  // namespace rosconsole_bridge
 
-#define REGISTER_ROSCONSOLE_BRIDGE                                      \
+#define REGISTER_ROSCONSOLE_BRIDGE \
   static rosconsole_bridge::RegisterOutputHandlerProxy __register_rosconsole_output_handler_proxy
 
-#endif
+#endif  // ROS2_CONSOLE_BRIDGE__BRIDGE_HPP_

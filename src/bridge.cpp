@@ -34,87 +34,34 @@
 
 /* Author: Ioan Sucan */
 
-#include <ros/console.h>
-#include <console_bridge/console.h>
+#include <map>
+
+#include <rcutils/logging.h>
 #include "rosconsole_bridge/bridge.h"
 
 namespace rosconsole_bridge
 {
 
-OutputHandlerROS::OutputHandlerROS(void) : OutputHandler()
+OutputHandlerROS::OutputHandlerROS(void)
+: OutputHandler()
 {
 }
 
-void OutputHandlerROS::log(const std::string &text, console_bridge::LogLevel level, const char *filename, int line)
+void OutputHandlerROS::log(
+  const std::string & text, console_bridge::LogLevel level,
+  const char * filename, int line)
 {
-  std::string prefix;
+  static const std::map<console_bridge::LogLevel, RCUTILS_LOG_SEVERITY> level_mapping{
+    {console_bridge::CONSOLE_BRIDGE_LOG_DEBUG, RCUTILS_LOG_SEVERITY_DEBUG},
+    {console_bridge::CONSOLE_BRIDGE_LOG_INFO, RCUTILS_LOG_SEVERITY_INFO},
+    {console_bridge::CONSOLE_BRIDGE_LOG_WARN, RCUTILS_LOG_SEVERITY_WARN},
+    {console_bridge::CONSOLE_BRIDGE_LOG_ERROR, RCUTILS_LOG_SEVERITY_ERROR},
+    {console_bridge::CONSOLE_BRIDGE_LOG_NONE, RCUTILS_LOG_SEVERITY_UNSET}
+  };
 
-  // Check for fake subprefix name defined as text output "package.prefix: message"
-  // Rejects something like "foo bar: message" because of the space
-  static const std::string NEEDLE_STRING = ": ";
-  size_t sub_index = text.find(NEEDLE_STRING);
-  size_t space_index = text.find(" ");
+  rcutils_log_location_t location = {"", filename, static_cast<size_t>(line)};
 
-  if (sub_index != std::string::npos && // needle is found
-      sub_index > 0 && // does not start with needle
-      space_index > sub_index && // no spaces before needle (": ")
-      text.length() > space_index + 1) // remaining text is not empty
-  {
-    prefix = std::string(ROSCONSOLE_NAME_PREFIX) + "." + text.substr(0, sub_index);
-    // update the sub_index to allow us to later remove the prefix from the message
-    sub_index += NEEDLE_STRING.length();
-  }
-  else
-  {
-    prefix = std::string(ROSCONSOLE_NAME_PREFIX) + ".console_bridge";
-    sub_index = 0;
-  }
-
-  // Handle different logging levels
-  switch (level)
-  {
-  case console_bridge::CONSOLE_BRIDGE_LOG_INFO:
-    {
-      ROSCONSOLE_DEFINE_LOCATION(true, ::ros::console::levels::Info, prefix);
-      if (ROS_UNLIKELY(__rosconsole_define_location__enabled))
-      {
-        ::ros::console::print(NULL, __rosconsole_define_location__loc.logger_, __rosconsole_define_location__loc.level_, filename, line, "", "%s",
-          text.substr(sub_index, std::string::npos).c_str());
-      }
-    }
-    break;
-  case console_bridge::CONSOLE_BRIDGE_LOG_WARN:
-    {
-      ROSCONSOLE_DEFINE_LOCATION(true, ::ros::console::levels::Warn, prefix);
-      if (ROS_UNLIKELY(__rosconsole_define_location__enabled))
-      {
-        ::ros::console::print(NULL, __rosconsole_define_location__loc.logger_, __rosconsole_define_location__loc.level_, filename, line, "", "%s",
-          text.substr(sub_index, std::string::npos).c_str());
-      }
-    }
-    break;
-  case console_bridge::CONSOLE_BRIDGE_LOG_ERROR:
-    {
-      ROSCONSOLE_DEFINE_LOCATION(true, ::ros::console::levels::Error, prefix);
-      if (ROS_UNLIKELY(__rosconsole_define_location__enabled))
-      {
-        ::ros::console::print(NULL, __rosconsole_define_location__loc.logger_, __rosconsole_define_location__loc.level_, filename, line, "", "%s",
-          text.substr(sub_index, std::string::npos).c_str());
-      }
-    }
-    break;
-  default:
-    // debug
-    {
-      ROSCONSOLE_DEFINE_LOCATION(true, ::ros::console::levels::Debug, prefix);
-      if (ROS_UNLIKELY(__rosconsole_define_location__enabled))
-      {
-        ::ros::console::print(NULL, __rosconsole_define_location__loc.logger_, __rosconsole_define_location__loc.level_, filename, line, "", "%s",
-          text.substr(sub_index, std::string::npos).c_str());
-      }
-    }
-    break;
-  }
+  rcutils_log(&location, level_mapping.at(level), nullptr, "%s", text.c_str());
 }
 
 RegisterOutputHandlerProxy::RegisterOutputHandlerProxy(void)

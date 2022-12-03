@@ -1,34 +1,40 @@
-cmake_minimum_required(VERSION 3.0.2)
+cmake_minimum_required(VERSION 3.8)
 project(rosconsole_bridge)
 
-find_package(console_bridge REQUIRED)
-find_package(catkin REQUIRED COMPONENTS cpp_common rosconsole)
+find_package(ament_cmake)
 
-include_directories(include ${catkin_INCLUDE_DIRS} ${console_bridge_INCLUDE_DIRS})
-link_directories(${catkin_LIBRARY_DIRS} ${console_bridge_LIBRARY_DIRS})
-
-catkin_package(
-  INCLUDE_DIRS include
-  LIBRARIES ${PROJECT_NAME}
-  CATKIN_DEPENDS rosconsole
-  DEPENDS console_bridge
+set(dependencies
+  console_bridge_vendor
+  console_bridge
+  rcutils
 )
+foreach(dependency ${dependencies})
+  find_package(${dependency} REQUIRED)
+endforeach()
 
-add_library(${PROJECT_NAME} src/bridge.cpp)
-
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${console_bridge_LIBRARIES})
+add_library(${PROJECT_NAME} SHARED
+  src/bridge.cpp
+)
+target_include_directories(${PROJECT_NAME}
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+ament_target_dependencies(${PROJECT_NAME} ${dependencies})
 
 install(
   TARGETS ${PROJECT_NAME}
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+  EXPORT ${PROJECT_NAME}Targets
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
 )
 
-install(
-  DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
-
-if(CATKIN_ENABLE_TESTING)
+if(BUILD_TESTING)
   add_subdirectory(test)
 endif()
+
+ament_export_targets(${PROJECT_NAME}Targets HAS_LIBRARY_TARGET)
+ament_export_dependencies(${dependencies})
+ament_package()

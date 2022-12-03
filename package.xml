@@ -1,6 +1,8 @@
-<package>
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
   <name>rosconsole_bridge</name>
-  <version>0.5.4</version>
+  <version>1.0.0</version>
   <description>rosconsole_bridge is a package used in conjunction with console_bridge and rosconsole for connecting console_bridge-based logging to rosconsole-based logging.</description>
   <maintainer email="michel@ekumenlabs.com">Michel Hidalgo</maintainer>
   <license>BSD</license>
@@ -12,13 +14,9 @@
   <author email="isucan@gmail.com">Ioan Sucan</author>
   <author email="dthomas@osrfoundation.org">Dirk Thomas</author>
 
-  <buildtool_depend>catkin</buildtool_depend>
-  <build_depend>cpp_common</build_depend>
-  <build_depend>libconsole-bridge-dev</build_depend>
-  <build_depend version_gte="1.11.5">rosconsole</build_depend>
+  <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <run_depend>cpp_common</run_depend>
-  <run_depend>libconsole-bridge-dev</run_depend>
-  <run_depend>rosconsole</run_depend>
+  <depend>rcutils</depend>
+  <depend>console_bridge_vendor</depend>
 
 </package>
